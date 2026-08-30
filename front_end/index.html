@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<!--
+lang="ar" => page language
+dir="rtl" => right-to-left layout
+-->
+<html lang="ar" dir="rtl">
+
+  <head>
+
+    <meta charset="UTF-8">
+    <title>Obesity Risk Prediction</title>
+
+    <style>
+        /*
+        CSS variables for reusable colors
+        --ink: main text color
+        --muted: secondary text color
+        --line: border color
+        --accent: main accent color
+        */
+        :root {
+            --ink: #17212b;
+            --muted: #637381;
+            --line: #d9e2e8;
+            --accent: #0b7285;
+            --accent-dark: #075766;
+        }
+
+        /* Apply box-sizing to all elements */
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Body styling and page layout */
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 36px 18px;
+            color: var(--ink);
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #e5f4f6 0%, #f8fafb 48%, #edf1f3 100%);
+        }
+
+        /* Wrapper for the main shell layout */
+        .shell {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .card {
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid rgba(217, 226, 232, 0.9);
+            border-radius: 18px;
+            box-shadow: 0 18px 50px rgba(31, 50, 62, 0.12);
+        }
+
+        .hero {
+            padding: 30px 34px 26px;
+            color: #fff;
+            background: var(--accent);
+        }
+
+        .eyebrow { margin:0 0 10px;
+                   color:#c9eef0;
+                   font-size:12px;
+                   font-weight:700;
+                   letter-spacing:1.5px;
+                   text-transform:uppercase;
+               }
+
+
+        h1 { margin:0;
+           font-size:clamp(25px, 4vw, 36px);
+            line-height:1.15;
+           }
+
+        .subtitle { max-width:560px;
+                    margin:12px 0 0;
+                    color:#d9f3f5;
+                    font-size:15px;
+                    line-height:1.7;
+                  }
+
+        form { padding:26px 34px 34px; }
+
+        .section-title { margin:0 0 16px;
+                         color:var(--accent-dark);
+                         font-size:17px; 
+                       }
+
+        .fields { display:grid;
+                  grid-template-columns:repeat(2, minmax(0, 1fr));
+                  gap:16px; 
+                }
+
+        label { display:block;
+                color:var(--muted);
+                font-size:13px;
+                font-weight:700;
+              }
+
+        input, select { width:100%;
+                        height:42px;
+                        margin-top:7px;
+                        padding:0 12px;
+                        color:var(--ink);
+                        border:1px solid var(--line);
+                        border-radius:8px;
+                        background:#fbfcfd;
+                        font:inherit; font-size:14px;
+                        transition:border-color .2s, box-shadow .2s;
+                      }
+
+        input:focus, select:focus { outline:none;
+                                    border-color:var(--accent);
+                                    box-shadow:0 0 0 3px rgba(11,114,133,.14);
+                                  }
+
+        .full { grid-column:1 / -1; }
+
+        button { width:100%;
+                height:46px;
+                margin-top:24px;
+                color:#fff;
+                border:0;
+                border-radius:8px;
+                background:var(--accent);
+                font:inherit;
+                font-size:15px;
+                font-weight:700;
+                cursor:pointer;
+                transition:background .2s, transform .2s;
+               }
+
+
+        button:hover { background:var(--accent-dark);
+                       transform:translateY(-1px);
+                     }
+
+        button:disabled { cursor:wait;
+                          opacity:.7;
+                          transform:none; 
+                        }
+
+        #result { margin-top:20px;
+                  padding:16px;
+                  border-radius:10px;
+                  text-align:center;
+                  font-size:15px;
+                  line-height:1.8;
+                  display:none; 
+                }
+
+        .success { background:#edf9f4;
+                   color:#176b4b;
+                   border:1px solid #9bd8bd;
+                 }
+
+        .error { background:#fff1ef;
+                 color:#a33b31;
+                 border:1px solid #efb4ae;
+               }
+
+
+        /* Responsive layout for small screens */
+        @media (max-width: 600px) {
+            body {
+                padding: 16px 10px;
+            }
+
+            .hero,
+            form {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .fields {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .full {
+                grid-column: auto;
+            }
+        }
+
+      </style>
+
+  </head>
+
+
+<!-- ---------------------------------------------------------------------------------- -->
+
+
+  <body>
+
+    <main class="shell">
+      <div class="card">
+        <header class="hero">
+
+          <p class="eyebrow">Machine Learning Health Tool</p>
+          <h1>توقع مستوى السمنة</h1>
+          <p class="subtitle">أدخل بياناتك للحصول على تصنيف متوقع لمستوى السمنة مع درجة الثقة.</p>
+
+        </header>
+
+
+<!--
+  Prevent the default form submission and call the predict() function
+  so the browser sends data to the API endpoint through JavaScript.
+-->
+        <form onsubmit="event.preventDefault(); predict();">
+          <h2 class="section-title">بيانات الشخص / Patient Information</h2>
+          <div class="fields">
+
+            <label>Gender
+              <select id="Gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </label>
+
+            <label>Age <input type="number" id="Age" value="25"></label>
+            <label>Height (متر) <input type="number" step="0.01" id="Height" value="1.75"></label>
+            <label>Weight (كيلو) <input type="number" step="0.1" id="Weight" value="80"></label>
+
+
+            <label>family_history_with_overweight
+              <select id="family_history_with_overweight">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </label>
+
+
+            <label>FAVC (أكل عالي السعرات بكثرة؟)
+              <select id="FAVC">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </label>
+
+
+            <label>FCVC (تكرار أكل الخضار 1-3) <input type="number" step="0.1" id="FCVC" value="2"></label>
+            <label>NCP (عدد الوجبات الرئيسية) <input type="number" step="0.1" id="NCP" value="3"></label>
+
+
+            <label>CAEC (الأكل بين الوجبات)
+              <select id="CAEC">
+                <option value="no">No</option>
+                <option value="Sometimes">Sometimes</option>
+                <option value="Frequently">Frequently</option>
+                <option value="Always">Always</option>
+              </select>
+            </label>
+
+
+            <label>SMOKE
+              <select id="SMOKE">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </label>
+
+
+            <label>CH2O (لتر مياه يومياً 1-3) <input type="number" step="0.1" id="CH2O" value="2"></label>
+
+
+            <label>SCC (بتراقب السعرات؟)
+              <select id="SCC">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </label>
+
+
+
+            <label>FAF (نشاط رياضي 0-3) <input type="number" step="0.1" id="FAF" value="1"></label>
+            <label>TUE (وقت الشاشات 0-2) <input type="number" step="0.1" id="TUE" value="1"></label>
+
+
+            <label>CALC (الكحول)
+              <select id="CALC">
+                <option value="no">No</option>
+                <option value="Sometimes">Sometimes</option>
+                <option value="Frequently">Frequently</option>
+              </select>
+            </label>
+
+
+            <label class="full">MTRANS (وسيلة المواصلات)
+              <select id="MTRANS">
+                <option value="Public_Transportation">Public_Transportation</option>
+                <option value="Automobile">Automobile</option>
+                <option value="Walking">Walking</option>
+                <option value="Motorbike">Motorbike</option>
+                <option value="Bike">Bike</option>
+              </select>
+            </label>
+
+
+          </div>
+
+          <button type="submit">توقع / Predict</button>
+
+          <div id="result"></div>
+        </form>
+      </div>
+    </main>
+
+<!-- --------------------------------------------------------------------------- -->
+
+      <script>
+      const API_URL = window.location.protocol === "file:"
+        ? "http://127.0.0.1:8000/predict"
+        : "/predict";
+
+      const predictionLabels = {
+        Insufficient_Weight: { english: "Insufficient Weight: order(7)", arabic: "نقصان في الوزن" },
+        Normal_Weight: { english: "Normal Weight: order(6)", arabic: "وزن طبيعي" },
+        Overweight_Level_I: { english: "Overweight Level I: order(5)", arabic: "زيادة وزن من المستوى الأول" },
+        Overweight_Level_II: { english: "Overweight Level II: order(4)", arabic: "زيادة وزن من المستوى الثاني" },
+        Obesity_Type_I: { english: "Obesity Type I: order(3)", arabic: "السمنة من النوع الأول" },
+        Obesity_Type_II: { english: "Obesity Type II: order(2)", arabic: "السمنة من النوع الثاني" },
+        Obesity_Type_III: { english: "Obesity Type III: order(1)", arabic: "السمنة من النوع الثالث" },
+      };
+
+      async function predict() {
+        const payload = {
+          Gender: document.getElementById("Gender").value,
+          Age: parseFloat(document.getElementById("Age").value),
+          Height: parseFloat(document.getElementById("Height").value),
+          Weight: parseFloat(document.getElementById("Weight").value),
+          family_history_with_overweight: document.getElementById("family_history_with_overweight").value,
+          FAVC: document.getElementById("FAVC").value,
+          FCVC: parseFloat(document.getElementById("FCVC").value),
+          NCP: parseFloat(document.getElementById("NCP").value),
+          CAEC: document.getElementById("CAEC").value,
+          SMOKE: document.getElementById("SMOKE").value,
+          CH2O: parseFloat(document.getElementById("CH2O").value),
+          SCC: document.getElementById("SCC").value,
+          FAF: parseFloat(document.getElementById("FAF").value),
+          TUE: parseFloat(document.getElementById("TUE").value),
+          CALC: document.getElementById("CALC").value,
+          MTRANS: document.getElementById("MTRANS").value,
+        };
+
+        const resultDiv = document.getElementById("result");
+        const button = document.querySelector("button[type='submit']");
+        resultDiv.style.display = "block";
+        resultDiv.className = "";
+        resultDiv.textContent = "Predicting...";
+        button.disabled = true;
+
+        try {
+          const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) {
+            const errorText = await res.text();
+            let errorMessage = "حصل خطأ في السيرفر";
+            try {
+              const errorData = JSON.parse(errorText);
+              errorMessage = errorData.detail || errorMessage;
+            } catch {
+            }
+            throw new Error(errorMessage);
+          }
+
+          const data = await res.json();
+          const prediction = predictionLabels[data.prediction] || {
+            english: data.prediction,
+            arabic: "تصنيف غير معروف",
+          };
+          resultDiv.className = "success";
+          resultDiv.innerHTML = `Result: <strong>${prediction.english}</strong> (${prediction.arabic})<br>Confidence: ${(data.confidence * 100).toFixed(1)}% (درجة الثقة)`;
+        } catch (e) {
+          resultDiv.className = "error";
+          resultDiv.textContent = "خطأ: " + e.message;
+        } finally {
+          button.disabled = false;
+        }
+      }
+      </script>
+
+  </body>
+</html>
